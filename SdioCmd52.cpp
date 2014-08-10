@@ -1,4 +1,4 @@
-#include "SdioCmd53.h"
+#include "SdioCmd52.h"
 #include "SDIOParser.h"
 #include <iostream>
 #include <iomanip>
@@ -12,19 +12,18 @@
 
 using namespace std;
 
-const char * SdioCmd53::getShortString()
+const char * SdioCmd52::getShortString()
 {
     ostringstream stream;
     char format[200] = {0};
 
-    stream << "0x" << hex << cmdData << " CMD53 ";
+    stream << "0x" << hex << cmdData << " CMD52 ";
     if (getRead()) stream << "R:";
     else stream << "W:";
 
-    stream << getXferCount();
-
-    if (isBlockMode()) stream << " Blks";
-    else stream << " Bytes";
+    stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
+    if (getRead()) stream <<" from " << setw(5) << setfill('0') << hex << getRegisterAddress();
+    if (getWrite()) stream <<" to " << setw(5) << setfill('0') << hex << getRegisterAddress();
 
     string str = stream.str();
     const char * chr = str.c_str();
@@ -32,97 +31,80 @@ const char * SdioCmd53::getShortString()
     return chr;
 }
 
-const char * SdioCmd53::getDetailedString()
+const char * SdioCmd52::getDetailedString()
 {
     ostringstream stream;
     char format[200] = {0};
 
-    stream << hex << cmdData << " CMD53 ";
+    stream << "0x" << hex << cmdData << " CMD52 ";
     stream << "Function: " << getFunctionNumber() << ", ";
     if (getRead()) stream << "Read, ";
     else stream << "Write, ";
 
 
-    stream << getXferCount();
+    stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
+    if (getRead()) stream <<" from " << setw(5) << setfill('0') << hex << getRegisterAddress();
+    if (getWrite()) stream <<" to " << setw(5) << setfill('0') << hex << getRegisterAddress();
 
-    if (isBlockMode()) stream << " Blocks, ";
-    else stream << " Bytes, ";
+    if (isReadAfterWrite()) stream << ", RAW is set";
+    else stream << ", RAW is not set";
 
-    stream << "From Address: " << hex << getRegisterAddress() << ", ";
-
-    if (isIncrementingAddress()) stream << "using Incrementing Addresses";
-    else stream << "using Fixed Addressing";
 
     string str = stream.str();
     const char * chr = str.c_str();
 
     return chr;
 }
-bool SdioCmd53::getRead()
+bool SdioCmd52::getRead()
 {
     bool retVal = true;
-    if (CMD53_RW(cmdData))
+    if (CMD52_RW(cmdData))
     {
         retVal = false;
     }
     return retVal;
 }
 
-bool SdioCmd53::getWrite()
+bool SdioCmd52::getWrite()
 {
     return !getRead();
 }
 
-U32 SdioCmd53::getFunctionNumber()
+U32 SdioCmd52::getFunctionNumber()
 {
-    U8 fun = CMD53_FUN(cmdData);
+    U8 fun = (U8)CMD52_FUN(cmdData);
 }
 
-bool SdioCmd53::isBlockMode()
+bool SdioCmd52::isReadAfterWrite()
 {
     bool retVal = false;
-    if (CMD53_BLOCK_MODE(cmdData))
+    if (CMD52_RAW(cmdData))
     {
         retVal = true;
     }
     return retVal;
 }
-bool SdioCmd53::isByteMode()
-{
-    return !isBlockMode();
-}
-bool SdioCmd53::isIncrementingAddress()
-{
-    bool retVal = false;
-    if (CMD53_OP_CODE(cmdData))
-    {
-        retVal = true;
-    }
-    return retVal;
-}
-bool SdioCmd53::isFixedAddress()
-{
-    return !isIncrementingAddress();
-}
 
-U32 SdioCmd53::getRegisterAddress()
+
+U32 SdioCmd52::getRegisterAddress()
 {
-    U32 address = CMD53_ADDRESS(cmdData);
+    U32 address = CMD52_ADDRESS(cmdData);
     return address;
 }
 
-U32 SdioCmd53::getXferCount()
+U32 SdioCmd52::getData()
 {
-    U32 count = CMD53_COUNT(cmdData);
-    return count;
+    U32 data = (U32)CMD52_DATA(cmdData);
+    return data;
 }
 
-const char* SdioCmd53Resp::getShortString()
+
+const char* SdioCmd52Resp::getShortString()
 {
     ostringstream stream;
     char format[200] = {0};
 
-    stream << "0x" << hex << cmdData << " CMD53 Resp";
+    stream << "0x" << hex << cmdData << " CMD52 Resp";
 
     stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
 
@@ -131,13 +113,13 @@ const char* SdioCmd53Resp::getShortString()
 
     return chr;
 }
-const char* SdioCmd53Resp::getDetailedString()
+const char* SdioCmd52Resp::getDetailedString()
 {
     ostringstream stream;
     char format[200] = {0};
     U32 flags;
 
-    stream << "0x" << hex << cmdData << " CMD53 Rsp ";
+    stream << "0x" << hex << cmdData << " CMD52 Rsp ";
 
     stream << "Data: 0x" <<  setw(2) << setfill('0') << hex << getData() << " ";
     flags = getResponseBitFlags();
@@ -174,4 +156,15 @@ const char* SdioCmd53Resp::getDetailedString()
     const char * chr = str.c_str();
 
     return chr;
+}
+
+U32 SdioCmd52Resp::getResponseBitFlags()
+{
+    U32 flags = (U32)CMD52_RESP_FLAGS(cmdData);
+    return flags;
+}
+U32 SdioCmd52Resp::getData()
+{
+    U32  data = (U32)CMD52_RESP_DATA(cmdData);
+    return (U8)data;
 }

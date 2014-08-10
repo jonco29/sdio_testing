@@ -4,6 +4,7 @@
 #include "LogicPublicTypes.h"
 #include "SDIOParser.h"
 
+
 class SdioCmd
 {
 public:
@@ -14,6 +15,9 @@ public:
 
     virtual U32 getCmd() { return CMD_VAL(cmdData); };
     virtual U32 getDir() { return CMD_DIR(cmdData); };
+
+    static SdioCmd* CreateSdioCmd(U64 data);
+
 
 
 protected:

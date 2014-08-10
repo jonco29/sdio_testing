@@ -30,7 +30,7 @@ int main (int argc, char** argv)
             {
                 inStream >> uppercase >> hex >> input;
                 //cout << "jonathan " << uppercase << hex << input << " " << input - 1 <<endl;
-                cout << hex << input << "  -- " << endl;
+                //cout << hex << input << "  -- " << endl;
                 //cout << parse_str(input) << endl;
                 process(input);
             }
@@ -66,11 +66,32 @@ void canned()
 void process(U64 data)
 {
     U32 cmd = CMD_VAL(data);
+    SdioCmd *tmp;
 
     switch (cmd)
     {
+            {
+            cout << hex << data << endl;
+            cout << "short string: " << tmp->getShortString() << endl;
+            cout << "detailed string: " << tmp->getDetailedString() << endl;
+            }
         case 53:
-            processCmd53(data);
+            tmp = SdioCmd::CreateSdioCmd(data);
+            if (tmp != 0)
+            {
+                cout << hex << data << endl;
+                cout << "short string: " << tmp->getShortString() << endl;
+                cout << "detailed string: " << tmp->getDetailedString() << endl;
+            }
+            break;
+        case 52:
+            tmp = SdioCmd::CreateSdioCmd(data);
+            if (tmp != 0)
+            {
+                cout << hex << data << endl;
+                cout << "short string: " << tmp->getShortString() << endl;
+                cout << "detailed string: " << tmp->getDetailedString() << endl;
+            }
             break;
         default:
             break;

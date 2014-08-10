@@ -18,7 +18,6 @@
 
 // CMD52 Response fields
 #define CMD52_RESP_FLAGS(x) ((x >> 16) & 0xff)
-#define CMD52_RESP_FLAGS(x) ((x >> 16) & 0xff)
 #define CMD52_RESP_DATA(x)  ((x >> 8) & 0xff)
 
 // CMD53 Command Fields
