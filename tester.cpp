@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "CIA.h"
 
 using namespace std;
 
@@ -16,6 +17,7 @@ void processCmd53(U64 data);
 int main (int argc, char** argv)
 {
     U64 input;
+    cout << "sizeof CCCR_t is: 0x" << hex << sizeof(CCCR_t) << endl;
     if(argc <= 1)
     {
         canned();
