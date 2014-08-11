@@ -22,6 +22,7 @@ public:
 
 protected:
     U64 cmdData;
+    static SdioCmd* lastSdioHostCmd;
 };
 
 

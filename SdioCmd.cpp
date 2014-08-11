@@ -4,6 +4,7 @@
 #include "SdioCmd53.h"
 
 
+SdioCmd* SdioCmd::lastSdioHostCmd= 0;
 SdioCmd* SdioCmd::CreateSdioCmd(U64 data)
 {
     U32 cmd = CMD_VAL(data);
@@ -15,6 +16,8 @@ SdioCmd* SdioCmd::CreateSdioCmd(U64 data)
             if (CMD_DIR(data) == DIR_FROM_HOST)
             {
                 ptr = new SdioCmd53(data);
+                delete lastSdioHostCmd;
+                lastSdioHostCmd = ptr;
             }
             else
             {
@@ -25,6 +28,8 @@ SdioCmd* SdioCmd::CreateSdioCmd(U64 data)
             if (CMD_DIR(data) == DIR_FROM_HOST)
             {
                 ptr = new SdioCmd52(data);
+                delete lastSdioHostCmd;
+                lastSdioHostCmd = ptr;
             }
             else
             {
@@ -32,6 +37,11 @@ SdioCmd* SdioCmd::CreateSdioCmd(U64 data)
             }
             break;
         default:
+            if (CMD_DIR(data) == DIR_FROM_HOST)
+            {
+                delete lastSdioHostCmd;
+                lastSdioHostCmd = 0;
+            }
             break;
     }
     return  ptr;

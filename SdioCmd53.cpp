@@ -21,7 +21,7 @@ const char * SdioCmd53::getShortString()
     if (getRead()) stream << "R:";
     else stream << "W:";
 
-    stream << getXferCount();
+    stream << setw(2) << getXferCount() << " ";
 
     if (isBlockMode()) stream << " Blks";
     else stream << " Bytes";
@@ -113,7 +113,7 @@ U32 SdioCmd53::getRegisterAddress()
 
 U32 SdioCmd53::getXferCount()
 {
-    U32 count = CMD53_COUNT(cmdData);
+    U32 count = (U32)CMD53_COUNT(cmdData);
     return count;
 }
 
@@ -122,7 +122,7 @@ const char* SdioCmd53Resp::getShortString()
     ostringstream stream;
     char format[200] = {0};
 
-    stream << "0x" << hex << cmdData << " CMD53 Resp";
+    stream << "0x" << hex << cmdData << " CMD53 Resp ";
 
     stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
 

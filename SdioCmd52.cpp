@@ -104,7 +104,7 @@ const char* SdioCmd52Resp::getShortString()
     ostringstream stream;
     char format[200] = {0};
 
-    stream << "0x" << hex << cmdData << " CMD52 Resp";
+    stream << "0x" << hex << cmdData << " CMD52 Resp ";
 
     stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
 
