@@ -70,33 +70,12 @@ void process(U64 data)
     U32 cmd = CMD_VAL(data);
     SdioCmd *tmp;
 
-    switch (cmd)
+    tmp = SdioCmd::CreateSdioCmd(data);
+    if (tmp != 0)
     {
-            {
-            cout << hex << data << endl;
-            cout << "short string: " << tmp->getShortString() << endl;
-            cout << "detailed string: " << tmp->getDetailedString() << endl;
-            }
-        case 53:
-            tmp = SdioCmd::CreateSdioCmd(data);
-            if (tmp != 0)
-            {
-                cout << hex << data << endl;
-                cout << "short string: " << tmp->getShortString() << endl;
-                cout << "detailed string: " << tmp->getDetailedString() << endl;
-            }
-            break;
-        case 52:
-            tmp = SdioCmd::CreateSdioCmd(data);
-            if (tmp != 0)
-            {
-                cout << hex << data << endl;
-                cout << "short string: " << tmp->getShortString() << endl;
-                cout << "detailed string: " << tmp->getDetailedString() << endl;
-            }
-            break;
-        default:
-            break;
+        cout << hex << data << endl;
+        cout << "short string: " << tmp->getShortString() << endl;
+        cout << "detailed string: " << tmp->getDetailedString() << endl;
     }
 }
 void processCmd53(U64 data)
@@ -105,18 +84,4 @@ void processCmd53(U64 data)
 
     cout << "short string: " << cmd->getShortString() << endl;
     cout << "detailed string: " << cmd->getDetailedString() << endl;
-    // cout << "CMD: " << hex << cmd->getCmd() << endl;;
-    // cout << "DIR: " << hex << cmd->getDir() << endl;;
-
-    // cout << "Read: " << cmd->getRead() << endl;
-    // cout << "Write: " << cmd->getWrite() << endl;
-
-    // cout << "Function Number: " << cmd->getFunctionNumber() << endl;
-    // cout << "BlockMode: " << cmd->isBlockMode() << endl;
-    // cout << "ByteMode: " << cmd->isByteMode() << endl;
-    // cout << "Fixed Address: " << cmd->isFixedAddress() << endl;
-    // cout << "Incrementing Address: " << cmd->isIncrementingAddress() << endl;
-    // cout << "Register Address: 0x" << hex << cmd->getRegisterAddress() << endl;
-    // cout << "Transfer Count (byte/block): " << cmd->getXferCount() << endl;
-
 }

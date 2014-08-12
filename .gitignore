@@ -4,3 +4,4 @@ a.out
 .*.swo
 .swo
 .sw*
+*.o
