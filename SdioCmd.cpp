@@ -3,6 +3,7 @@
 #include "SdioCmd5.h"
 #include "SdioCmd52.h"
 #include "SdioCmd53.h"
+#include "CIA.h"
 
 #include "SDIOParser.h"
 #include <iostream>
@@ -71,15 +72,22 @@ SdioCmd* SdioCmd::CreateSdioCmd(U64 data)
             }
             break;
         case 52:
-            if (CMD_DIR(data) == DIR_FROM_HOST)
             {
-                ptr = new SdioCmd52(data);
-                delete lastSdioHostCmd;
-                lastSdioHostCmd = ptr;
-            }
-            else
-            {
-                ptr = new SdioCmd52Resp(data);
+                // the cccr will be static, so no need to free it
+                CCCR *cccr = CCCR::BuildCCCR(data);
+
+                if (CMD_DIR(data) == DIR_FROM_HOST)
+                {
+                    ptr = new SdioCmd52(data);
+                    delete lastSdioHostCmd;
+                    lastSdioHostCmd = ptr;
+                }
+                else
+                {
+                    ptr = new SdioCmd52Resp(data);
+                }
+                // verification that I cannot delete singleton
+                //delete cccr;
             }
             break;
         case 53:

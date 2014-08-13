@@ -38,6 +38,7 @@ int main (int argc, char** argv)
             }
 
             inStream.close();
+            CCCR::DumpCCCRTable();
         }
     }
     return 0;
