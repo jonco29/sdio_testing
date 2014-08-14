@@ -18,9 +18,6 @@
                       (1 & x >> 1), \
                       (1 & x )
 
-#define CCCR_ADDRESS_START 0x00
-#define CCCR_ADDRESS_END   0xFF
-#define NUM_CCCR_ELEMENTS 0x14
 
 // this is arbitrary -- just looking at the map in 6.7 of the simplified spec
 #define CIS_MAX_SIZE 0xFFF
@@ -49,6 +46,10 @@ typedef struct PACKED
 } CCCR_t;
 
 extern const char *CCCR_NAMES[];
+#define CCCR_ADDRESS_START  0x00
+#define CCCR_ADDRESS_END    0xFF
+#define NUM_CCCR_ELEMENTS   0x14
+
 
 
 // the FBR is an array of 256 bytes for functions 1-7, each function addressed at the next 100 (hex)
@@ -65,24 +66,34 @@ typedef struct PACKED
     unsigned char RFU2[0xEE];                                   // 0x112--0x1ff
 } FBR_t;;
 
+extern const char* FBR_NAMES[];
+#define FBR_ADDRESS_START   0x100
+#define FBR_ADDRESS_END     0x7ff
+#define NUM_FBR_ELEMENTS    0x12
+
 class CCCR
 {
     public:
         static CCCR* BuildCCCR(U64 data);
         static bool AddCmd52ToCCCR(U64 data);
         static void DumpCCCRTable(void);
+        static void DumpFBRTable(void);
         U32 getCISPointer();
 
     private:
         // variables
         CCCR_t cccr_data;
         FBR_t fbr_data[7];
+        // flags to indicate if data is populated, 
+        // don't want to waste output space w/ unpopulated tables
+        bool cccrDataPopulated;
+        bool fbrDataPopulated[7];
+
         static CCCR* theCCCR;
         SdioCmd52 *lastHostCmd52;
         
 
         // functions
-        //CCCR() :lastHostCmd52(0) {memset(&cccr_data, 0, sizeof(cccr_data));};
         CCCR();
         ~CCCR() {};
         CCCR(const CCCR& c) {};

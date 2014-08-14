@@ -36,6 +36,7 @@ int main (int argc, char** argv)
 
             inStream.close();
             CCCR::DumpCCCRTable();
+            CCCR::DumpFBRTable();
         }
     }
     return 0;
