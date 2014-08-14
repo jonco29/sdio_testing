@@ -31,9 +31,6 @@ int main (int argc, char** argv)
             while (!inStream.eof())
             {
                 inStream >> uppercase >> hex >> input;
-                //cout << "jonathan " << uppercase << hex << input << " " << input - 1 <<endl;
-                //cout << hex << input << "  -- " << endl;
-                //cout << parse_str(input) << endl;
                 process(input);
             }
 
@@ -77,6 +74,7 @@ void process(U64 data)
         cout << hex << data << endl;
         cout << "short string: " << tmp->getShortString() << endl;
         cout << "detailed string: " << tmp->getDetailedString() << endl;
+        cout.flush();
     }
 }
 void processCmd53(U64 data)

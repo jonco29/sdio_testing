@@ -26,6 +26,7 @@ const char * SdioCmd52::getShortString()
     if (getWrite()) stream <<" to " << setw(5) << setfill('0') << hex << getRegisterAddress();
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;
@@ -51,6 +52,7 @@ const char * SdioCmd52::getDetailedString()
 
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;
@@ -109,6 +111,7 @@ const char* SdioCmd52Resp::getShortString()
     stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;
@@ -153,6 +156,7 @@ const char* SdioCmd52Resp::getDetailedString()
     
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;

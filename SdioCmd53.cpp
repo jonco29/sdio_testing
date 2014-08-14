@@ -27,6 +27,7 @@ const char * SdioCmd53::getShortString()
     else stream << " Bytes";
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;
@@ -54,6 +55,7 @@ const char * SdioCmd53::getDetailedString()
     else stream << "using Fixed Addressing";
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;
@@ -122,11 +124,13 @@ const char* SdioCmd53Resp::getShortString()
     ostringstream stream;
     char format[200] = {0};
 
-    stream << "0x" << hex << cmdData << " CMD53 Resp ";
+    sprintf(format, "0x%012llX CMD53 Resp", cmdData);
+    //stream << format;
+    // stream << "0x" << hex << cmdData << " CMD53 Resp ";
+    // stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
 
-    stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
-
-    string str = stream.str();
+    string str(format);
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;
@@ -171,6 +175,7 @@ const char* SdioCmd53Resp::getDetailedString()
     
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;

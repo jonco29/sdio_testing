@@ -26,11 +26,6 @@ const char * SdioCmd::getShortString()
 
     sprintf(format, "0x%012llX", cmdData);
 
-    // stream << hex << "0x" << cmdData << " ";
-    //stream << format;
-    
-
-    //string str = stream.str();
     string str(format);
     const char * chr = str.c_str();
 
@@ -45,6 +40,7 @@ const char * SdioCmd::getDetailedString()
     stream << "0x" << hex << cmdData  << ", CMD" << getCmd();
 
     string str = stream.str();
+    stream.flush();
     const char * chr = str.c_str();
 
     return chr;
