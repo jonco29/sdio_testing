@@ -235,7 +235,7 @@ void CCCR::DumpFBRTable(void)
                 {
                     // sprintf(buffer, "ADDR 0x%02X: 0x%02X -- " PRINTF_BIT_PATTERN,
                     //         i, tmp[i], PRINTF_BIT(tmp[i]));
-                    sprintf(buffer, "%s 0x%02X -- " PRINTF_BIT_PATTERN, CCCR_NAMES[i], tmp[i], PRINTF_BIT(tmp[i]));
+                    sprintf(buffer, "%s 0x%02X -- " PRINTF_BIT_PATTERN, FBR_NAMES[i], tmp[i], PRINTF_BIT(tmp[i]));
 
                     cout << buffer << endl;
                 }
