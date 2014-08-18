@@ -63,10 +63,14 @@ CCCR* CCCR::theCCCR = 0;
 
 CCCR::CCCR() 
     :lastHostCmd52(0) ,
-    cccrDataPopulated(false)
+    cccrDataPopulated(false),
+    tupleChain()
 {
     int i;
     memset(&cccr_data, 0, sizeof(CCCR_t));
+    cccr_data.Common_CIS_Pointer[0] = (CIA_PTR_INIT_VAL ) & 0xff;
+    cccr_data.Common_CIS_Pointer[1] = (CIA_PTR_INIT_VAL >> 8) & 0xff;
+    cccr_data.Common_CIS_Pointer[2] = (CIA_PTR_INIT_VAL >> 16) & 0xff;
 
     for (i = 0; i < 7; i++)
     {
@@ -132,14 +136,8 @@ bool CCCR::HandleCmd52Request(U64 data)
         else
         {
             cout << "------------------------------------------------- " << address << endl;
-            U32 tmp = getCISPointer();
+            U32 tmp = getCisAddress();
             lastHostCmd52 = c52;
-            // //if (address >= 0x100 && address <= 0x1ff)
-            // if (address >= tmp && address <= (tmp + CIS_MAX_SIZE))
-            // {
-            //     // we're reading CIS
-            //     lastHostCmd52 = c52;
-            // }
         }
     }
 
@@ -168,8 +166,12 @@ bool CCCR::HandleCmd52Response(U64 data)
                 cccrDataPopulated = true;
                 cccrData_ptr[regAddress] = c_data;
             }
-
-
+        }
+        // see if this is the common CIS within the CIS
+        if (regAddress >= CIS_AREA_START && regAddress <= CIS_AREA_END)
+        {
+            tupleChain.setCisAddress(getCisAddress());
+            tupleChain.addDataToTuple(data);
         }
         // try to add to all FBR's, they will check addressing, and recursively add the 
         // CIS and CSA pointer addresses
@@ -230,27 +232,85 @@ void CCCR::DumpFBRTable(void)
     }
 }
 
-U32 CCCR::getCISPointer()
+U32 CCCR::getCisAddress()
 {
-    U32 tmp = 0;
-    memcpy (&tmp, &cccr_data.Common_CIS_Pointer, 3);
-    return tmp;
+    U32 address = 0;
+    address = (cccr_data.Common_CIS_Pointer[0] << 0) | (cccr_data.Common_CIS_Pointer[1] << 8) | (cccr_data.Common_CIS_Pointer[2] << 16);
+    return address;
+}
+
+void CCCR::TupleChain::setCisAddress(U32 address)
+{
+    if ((address != CIA_PTR_INIT_VAL) && (address >= CIS_AREA_START) && (address <= CIS_AREA_END))
+    {
+        cisAddress = address;
+    }
+}
+void CCCR::TupleChain::addDataToTuple(U64 data)
+{
+    SdioCmd52 *c52 = theCCCR->lastHostCmd52;
+    SdioCmd52Resp *c52Resp = new SdioCmd52Resp(data);
+    U32 regAddress = 0;
+    U32 c_data = 0;
+    list<TUPLE>::iterator = tuples.end();
+
+    regAddress = c52->getRegisterAddress();
+    c_data = (U8)c52Resp->getData();
+
+    if (regAddress == cisAddress)
+    {
+        // we are building the CIS now, this is the first step.  we need to extract data and setup our
+        // end addresses for the range checking, etc.
+        cout <<"++++++++++++++++++++++++++++++++++++++++++++++ building cis: 0x" << hex << cisAddress <<endl;
+        newTuplePending = true;
+        tuples.push_back(TUPLE(cisAddress));
+    }
+    else if (regAddress == lastTupleAddress)
+    {
+        if (c_data == 0xff)
+        {
+            // done with tuple walk
+            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ tuple is done: 0x" 
+                << hex << cisAddress << ", data: 0x" << hex << c_data << endl;
+        }
+        else
+        {
+            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ time for next tuple: 0x" 
+                << hex << lastTupleAddress << ", data: 0x" << hex << c_data << endl;
+            newTuplePending = true;
+        }
+    }
+    else if ((regAddress < lastTupleAddress) && (regAddress > cisAddress))
+    {
+        cout <<"++++++++++++++++++++++++++++++++++++++++++++++ generic tuple read: 0x" 
+            << hex << regAddress << ", data: 0x" << hex << c_data << endl;
+    }
+    else
+    {
+        if (newTuplePending)
+        {
+            newTuplePending = false;
+            lastTupleAddress = regAddress + c_data + 1;
+            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ next tuple is at: 0x" 
+                << hex << lastTupleAddress<< endl;
+
+        }
+    }
 }
 
 CCCR::FBR::FBR(U32 number)
 : functionNumber(number),
     fbrDataPopulated(false),
-    lastTupleAddress(0),
-    newTuplePending(false)
+    tupleChain()
 {
     memset(&fbr_data, 0, sizeof (FBR_t));
-    fbr_data.CIS_ptr[0] = FBR_PTR_INIT_VAL >> 16;
-    fbr_data.CIS_ptr[1] = (FBR_PTR_INIT_VAL >> 8) & 0xff;
-    fbr_data.CIS_ptr[2] = (FBR_PTR_INIT_VAL ) & 0xff;
+    fbr_data.CIS_ptr[0] = (CIA_PTR_INIT_VAL ) & 0xff;
+    fbr_data.CIS_ptr[1] = (CIA_PTR_INIT_VAL >> 8) & 0xff;
+    fbr_data.CIS_ptr[2] = (CIA_PTR_INIT_VAL >> 16) & 0xff;
 
-    fbr_data.CSA_ptr[0] = FBR_PTR_INIT_VAL >> 16;
-    fbr_data.CSA_ptr[1] = (FBR_PTR_INIT_VAL >> 8) & 0xff;
-    fbr_data.CSA_ptr[2] = (FBR_PTR_INIT_VAL ) & 0xff;
+    fbr_data.CSA_ptr[0] = (CIA_PTR_INIT_VAL ) & 0xff;
+    fbr_data.CSA_ptr[1] = (CIA_PTR_INIT_VAL >> 8) & 0xff;
+    fbr_data.CSA_ptr[2] = (CIA_PTR_INIT_VAL >> 16) & 0xff;
 }
 
 void CCCR::FBR::DumpFBR()
@@ -311,49 +371,18 @@ void CCCR::FBR::addData(U64 data)
 
     cisAddress = getCisAddress();
     // make sure CIS Address has been set to a value, and not the initialization value
-    if (cisAddress != 0xdeadbf)
+    // if this is the case, try to populate
+    if ((cisAddress != CIA_PTR_INIT_VAL) && (cisAddress >= CIS_AREA_START) && (cisAddress <= CIS_AREA_END))
     {
-        if (regAddress == cisAddress)
-        {
-            // we are building the CIS now, this is the first step.  we need to extract data and setup our
-            // end addresses for the range checking, etc.
-            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ building cis: 0x" << hex << getCisAddress() <<endl;
-            newTuplePending = true;
-        }
-        else if (regAddress == lastTupleAddress)
-        {
-            if (c_data == 0xff)
-            {
-                // done with tuple walk
-                cout <<"++++++++++++++++++++++++++++++++++++++++++++++ tuple is done: 0x" << hex << getCisAddress() << ", data: 0x" << hex << c_data << endl;
-            }
-            else
-            {
-                cout <<"++++++++++++++++++++++++++++++++++++++++++++++ time for next tuple: 0x" << hex << lastTupleAddress << ", data: 0x" << hex << c_data << endl;
-                newTuplePending = true;
-            }
-        }
-        else if ((regAddress < lastTupleAddress) && (regAddress > cisAddress))
-        {
-            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ generic tuple read: 0x" << hex << regAddress << ", data: 0x" << hex << c_data << endl;
-        }
-        else
-        {
-            if (newTuplePending)
-            {
-                newTuplePending = false;
-                lastTupleAddress = regAddress + c_data + 1;
-                cout <<"++++++++++++++++++++++++++++++++++++++++++++++ next tuple is at: 0x" << hex << lastTupleAddress<< endl;
-
-            }
-        }
+        tupleChain.setCisAddress(cisAddress);
+        tupleChain.addDataToTuple(data);
     }
 
 }
 U32 CCCR::FBR::getCisAddress(void)
 {
     U32 address = 0;
-    address = (fbr_data.CIS_ptr[0] << 16) | (fbr_data.CIS_ptr[1] << 8) | (fbr_data.CIS_ptr[2] << 0);
+    address = (fbr_data.CIS_ptr[0] << 0) | (fbr_data.CIS_ptr[1] << 8) | (fbr_data.CIS_ptr[2] << 16);
     return address;
 }
 void CCCR::FBR::dumpCIS(void)

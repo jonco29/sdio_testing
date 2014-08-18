@@ -6,6 +6,9 @@
 #include "SdioCmd52.h"
 #include <string.h>
 #include <list>
+#include <iterator>
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -24,6 +27,9 @@ using namespace std;
 
 // this is arbitrary -- just looking at the map in 6.7 of the simplified spec
 #define CIS_MAX_SIZE 0xFFF
+#define CIA_PTR_INIT_VAL    0xDEADBF
+#define CIS_AREA_START      0x1000
+#define CIS_AREA_END        0x7FFF
 
 typedef struct PACKED 
 {
@@ -73,17 +79,35 @@ extern const char* FBR_NAMES[];
 #define FBR_ADDRESS_START   0x100
 #define FBR_ADDRESS_END     0x7ff
 #define NUM_FBR_ELEMENTS    0x12
-#define FBR_PTR_INIT_VAL    0xDEADBF
 
 class TUPLE
 {
     private:
         U32 address;
         U32 tplCode;
-        U32 nextAddress;
+        U32 size;
         list <U32> body;
     public:
-        TUPLE() :address(0), tplCode(0), nextAddress(0), body() {};
+        TUPLE(U32 addr=0) :address(addr), tplCode(0), size(0), body() {}
+        void setAddress(U32 addr) {address = addr;}
+        void setTplCode(U32 code) {tplCode = code;}
+        void setSize(U32 sz) {size = sz;}
+        void addData(U32 data) { body.push_back(data);}
+        void dump()
+        {
+            list<U32>::iterator it = body.begin();
+            int i = 0;
+            cout << "Tuple: 0x" << setw(2) << setfill('0') << hex << tplCode 
+                << ", located at 0x" << setw(4) << setfill('0') << hex << address << endl;
+            cout << "=================================================" << endl;
+            for (it = body.begin(); it != body.end(); it++)
+            {
+                cout << "0x" << setw(4) << setfill('0') << hex << (address + i++) <<"\t\t" <<
+                    setw(4) << setfill('0') << *it << endl;
+            }
+            cout << "=================================================" << endl;
+        }
+
 };
 
 class CCCR
@@ -93,9 +117,23 @@ class CCCR
         static bool AddCmd52ToCCCR(U64 data);
         static void DumpCCCRTable(void);
         static void DumpFBRTable(void);
-        U32 getCISPointer();
+        U32 getCisAddress();
 
     protected:
+        class TupleChain
+        {
+            private:
+                U32 lastTupleAddress;
+                U32 cisAddress;
+                bool newTuplePending;
+                list <TUPLE> tuples;
+
+            public:
+                TupleChain() :lastTupleAddress(0), newTuplePending(false), tuples() {};
+                void setCisAddress(U32 address);
+                void addDataToTuple(U64 data);
+        };
+
         class FBR
         {
             public:
@@ -108,8 +146,7 @@ class CCCR
                 FBR_t fbr_data;
                 U32 functionNumber;
                 bool fbrDataPopulated;
-                U32 lastTupleAddress;
-                bool newTuplePending;
+                TupleChain tupleChain;
 
         };
 
@@ -122,6 +159,7 @@ class CCCR
         SdioCmd52 *lastHostCmd52;
         static CCCR* theCCCR;
         FBR fbr[7];
+        TupleChain tupleChain;
         
 
         // functions
