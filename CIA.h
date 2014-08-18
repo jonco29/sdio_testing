@@ -5,6 +5,9 @@
 #include "SDIOParser.h"
 #include "SdioCmd52.h"
 #include <string.h>
+#include <list>
+
+using namespace std;
 
 #define PACKED __attribute__ ((__packed__))
 
@@ -70,6 +73,18 @@ extern const char* FBR_NAMES[];
 #define FBR_ADDRESS_START   0x100
 #define FBR_ADDRESS_END     0x7ff
 #define NUM_FBR_ELEMENTS    0x12
+#define FBR_PTR_INIT_VAL    0xDEADBF
+
+class TUPLE
+{
+    private:
+        U32 address;
+        U32 tplCode;
+        U32 nextAddress;
+        list <U32> body;
+    public:
+        TUPLE() :address(0), tplCode(0), nextAddress(0), body() {};
+};
 
 class CCCR
 {
@@ -80,17 +95,33 @@ class CCCR
         static void DumpFBRTable(void);
         U32 getCISPointer();
 
+    protected:
+        class FBR
+        {
+            public:
+                FBR(U32 number = 1);
+                void DumpFBR();
+                void addData(U64 data);
+                U32 getCisAddress(void);
+                void dumpCIS(void);
+            private:
+                FBR_t fbr_data;
+                U32 functionNumber;
+                bool fbrDataPopulated;
+                U32 lastTupleAddress;
+                bool newTuplePending;
+
+        };
+
     private:
         // variables
         CCCR_t cccr_data;
-        FBR_t fbr_data[7];
         // flags to indicate if data is populated, 
         // don't want to waste output space w/ unpopulated tables
         bool cccrDataPopulated;
-        bool fbrDataPopulated[7];
-
-        static CCCR* theCCCR;
         SdioCmd52 *lastHostCmd52;
+        static CCCR* theCCCR;
+        FBR fbr[7];
         
 
         // functions
