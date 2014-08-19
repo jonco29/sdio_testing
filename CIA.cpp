@@ -215,6 +215,7 @@ void CCCR::DumpCCCRTable(void)
                 cout << buffer << endl;
             }
             cout << "=========================================================================================================" << endl;
+            theCCCR->tupleChain.dump();
         }
     }
 }
@@ -256,6 +257,7 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
     U32 c_data = 0;
     list<TUPLE>::iterator it = tuples.end();
     TUPLE tuple;
+    list <U32>::iterator jc_it;
 
     regAddress = c52->getRegisterAddress();
     c_data = (U8)c52Resp->getData();
@@ -296,8 +298,11 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
     }
     else if ((regAddress < lastTupleAddress) && (regAddress > cisAddress))
     {
+        //TUPLE t = tuples.front();
         it--;
+        // examine in gdb using: plist it->body int, after the next call
         it->addData(c_data);
+        jc_it = it->body.begin();
         cout <<"++++++++++++++++++++++++++++++++++++++++++++++ generic tuple read: 0x" 
             << hex << regAddress << ", data: 0x" << hex << c_data << endl;
     }
@@ -314,6 +319,19 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
 
         }
     }
+}
+
+void CCCR::TupleChain::dump()
+{
+    cout << "Tuples for address: 0x" << hex << cisAddress << endl;
+    cout << "================================================================================" << endl;
+    list<TUPLE>::iterator tupleIterator;
+
+    for (tupleIterator = tuples.begin(); tupleIterator != tuples.end(); tupleIterator++)
+    {
+        tupleIterator->dump();
+    }
+
 }
 
 CCCR::FBR::FBR(U32 number)
@@ -339,7 +357,7 @@ void CCCR::FBR::DumpFBR()
 
     if (fbrDataPopulated)
     {
-        funcNo = 1;
+        funcNo = functionNumber;
         tmp = (U8*)&fbr_data;
 
         cout << endl << "FBR TABLE for Function " << funcNo << "  Address range: 0x0"<< funcNo <<"00--0x0" << funcNo <<"FF" << endl;
@@ -352,6 +370,8 @@ void CCCR::FBR::DumpFBR()
         }
         cout << "=========================================================================================================" << endl;
         cout << "CIS Address is 0x:" << getCisAddress() << endl;
+        tupleChain.dump();
+
     }
 }
 
@@ -388,6 +408,7 @@ void CCCR::FBR::addData(U64 data)
     // we maintain the initial and the last address to use for our range checkers
 
     cisAddress = getCisAddress();
+
     // make sure CIS Address has been set to a value, and not the initialization value
     // if this is the case, try to populate
     if ((cisAddress != CIA_PTR_INIT_VAL) && (cisAddress >= CIS_AREA_START) && (cisAddress <= CIS_AREA_END))

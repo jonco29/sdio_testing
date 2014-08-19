@@ -9,6 +9,8 @@
 #include <iterator>
 #include <iostream>
 #include <iomanip>
+#include <map>
+#include <string>
 
 using namespace std;
 
@@ -82,13 +84,27 @@ extern const char* FBR_NAMES[];
 
 class TUPLE
 {
-    private:
+    //private:
+    public:
         U32 address;
         U32 tplCode;
         U32 size;
         list <U32> body;
+        map <int, string> tupleNames;
     public:
-        TUPLE(U32 addr=0) :address(addr), tplCode(0), size(0), body() {}
+        TUPLE(U32 addr=0) :address(addr), tplCode(0), size(0), body() 
+        {
+            tupleNames[0x00]= string("CISTPL_NULL");
+            tupleNames[0x10]= string("CISTPL_CHECKSUM");
+            tupleNames[0x15]= string("CISTPL_VERS_1");
+            tupleNames[0x16]= string("CISTPL_ALTSTR");
+            tupleNames[0x20]= string("CISTPL_MANFID");
+            tupleNames[0x21]= string("CISTPL_FUNCID");
+            tupleNames[0x22]= string("CISTPL_FUNCE");
+            tupleNames[0x91]= string("CISTPL_SDIO_STD");
+            tupleNames[0x92]= string("CISTPL_SDIO_EXT");
+            tupleNames[0xFF]= string("CISTPL_END");
+        }
         void setAddress(U32 addr) {address = addr;}
         void setTplCode(U32 code) {tplCode = code;}
         void setSize(U32 sz) {size = sz;}
@@ -97,15 +113,25 @@ class TUPLE
         {
             list<U32>::iterator it = body.begin();
             int i = 0;
-            cout << "Tuple: 0x" << setw(2) << setfill('0') << hex << tplCode 
-                << ", located at 0x" << setw(4) << setfill('0') << hex << address << endl;
-            cout << "=================================================" << endl;
+            cout << "\tTuple: 0x" << setw(2) << setfill('0') << hex << tplCode 
+                << ", located at 0x" << setw(4) << setfill('0') << hex << address 
+                << ", size: 0x" << setw(4) << setfill('0') << hex << size << endl;
+            cout << "\t=================================================" << endl;
+
+
+            cout << "\t0x" << setw(4) << setfill('0') << hex << (address + i++) <<"\t\t" <<
+                setw(2) << setfill('0') << tplCode << "\t\t" << tupleNames[tplCode] << endl;
+
+            cout << "\t0x" << setw(4) << setfill('0') << hex << (address + i++) <<"\t\t" <<
+                setw(2) << setfill('0') << size << endl;
+
+            // now dump the body
             for (it = body.begin(); it != body.end(); it++)
             {
-                cout << "0x" << setw(4) << setfill('0') << hex << (address + i++) <<"\t\t" <<
-                    setw(4) << setfill('0') << *it << endl;
+                cout << "\t0x" << setw(4) << setfill('0') << hex << (address + i++) <<"\t\t" <<
+                    setw(2) << setfill('0') << *it << endl;
             }
-            cout << "=================================================" << endl;
+            cout << "\t=================================================" << endl;
         }
 
 };
@@ -132,6 +158,7 @@ class CCCR
                 TupleChain() :lastTupleAddress(0), newTuplePending(false), tuples() {};
                 void setCisAddress(U32 address);
                 void addDataToTuple(U64 data);
+                void dump();
         };
 
         class FBR
