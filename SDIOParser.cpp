@@ -362,6 +362,8 @@ const char* parse_CMD5_OCR(unsigned int ocr)
         stream << "3.5-3.6 Volts, ";
     }
 
+    stream << "      ";
+
     string str = stream.str();
     const char * chr = str.c_str();
 

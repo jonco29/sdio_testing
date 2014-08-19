@@ -128,7 +128,6 @@ bool CCCR::HandleCmd52Request(U64 data)
         // make sure the register address is within CCCR bounds
         if (address >= CCCR_ADDRESS_START && address <= CCCR_ADDRESS_END)
         {
-            //cout << "We got CCCR data: " << hex << data << endl;
             lastHostCmd52 = c52;
         }
         else if (address >= 0x100 && address <= 0x7ff)
@@ -137,7 +136,6 @@ bool CCCR::HandleCmd52Request(U64 data)
         }
         else
         {
-            cout << "------------------------------------------------- " << address << endl;
             U32 tmp = getCisAddress();
             lastHostCmd52 = c52;
         }
@@ -257,7 +255,6 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
     U32 c_data = 0;
     list<TUPLE>::iterator it = tuples.end();
     TUPLE tuple;
-    list <U32>::iterator jc_it;
 
     regAddress = c52->getRegisterAddress();
     c_data = (U8)c52Resp->getData();
@@ -266,7 +263,6 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
     {
         // we are building the CIS now, this is the first step.  we need to extract data and setup our
         // end addresses for the range checking, etc.
-        cout <<"++++++++++++++++++++++++++++++++++++++++++++++ building cis: 0x" << hex << cisAddress <<endl;
         newTuplePending = true;
         tuple = TUPLE(regAddress);
         tuple.setTplCode(c_data);
@@ -282,17 +278,10 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
         {
             // done with tuple walk
             tuple.setSize(0);
-
-            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ tuple is done: 0x" 
-                << hex << cisAddress << ", data: 0x" << hex << c_data << endl;
         }
         else
         {
             newTuplePending = true;
-
-            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ time for next tuple: 0x" 
-                << hex << lastTupleAddress << ", data: 0x" << hex << c_data << endl;
-
         }
         tuples.push_back(tuple);
     }
@@ -302,9 +291,6 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
         it--;
         // examine in gdb using: plist it->body int, after the next call
         it->addData(c_data);
-        jc_it = it->body.begin();
-        cout <<"++++++++++++++++++++++++++++++++++++++++++++++ generic tuple read: 0x" 
-            << hex << regAddress << ", data: 0x" << hex << c_data << endl;
     }
     else
     {
@@ -314,9 +300,6 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
             it->setSize(c_data);
             newTuplePending = false;
             lastTupleAddress = regAddress + c_data + 1;
-            cout <<"++++++++++++++++++++++++++++++++++++++++++++++ next tuple is at: 0x" 
-                << hex << lastTupleAddress<< endl;
-
         }
     }
 }
@@ -371,7 +354,6 @@ void CCCR::FBR::DumpFBR()
         cout << "=========================================================================================================" << endl;
         cout << "CIS Address is 0x:" << getCisAddress() << endl;
         tupleChain.dump();
-
     }
 }
 
@@ -423,7 +405,4 @@ U32 CCCR::FBR::getCisAddress(void)
     U32 address = 0;
     address = (fbr_data.CIS_ptr[0] << 0) | (fbr_data.CIS_ptr[1] << 8) | (fbr_data.CIS_ptr[2] << 16);
     return address;
-}
-void CCCR::FBR::dumpCIS(void)
-{
 }

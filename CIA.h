@@ -168,7 +168,6 @@ class CCCR
                 void DumpFBR();
                 void addData(U64 data);
                 U32 getCisAddress(void);
-                void dumpCIS(void);
             private:
                 FBR_t fbr_data;
                 U32 functionNumber;

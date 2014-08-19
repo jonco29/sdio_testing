@@ -21,7 +21,7 @@ const char * SdioCmd52::getShortString()
     if (getRead()) stream << "R:";
     else stream << "W:";
 
-    stream << "0x" <<  setw(2) << setfill('0') << hex << getData();
+    stream << "0x" <<  setw(2) << setfill('0') << hex << (unsigned int) getData();
     if (getRead()) stream <<" from " << setw(5) << setfill('0') << hex << getRegisterAddress();
     if (getWrite()) stream <<" to " << setw(5) << setfill('0') << hex << getRegisterAddress();
 

@@ -23,6 +23,7 @@ const char * SdioCmd5::getDetailedString()
     stream << "OCCR: " << hex << setw(6) << setfill('0') << occr << " ";
 
     stream << parse_CMD5_OCR(occr);
+    stream << " ";
 
     string str = stream.str();
     const char * chr = str.c_str();
@@ -44,8 +45,7 @@ const char* SdioCmd5Resp::getShortString()
 
     stream << "0x" << hex << cmdData << " CMD5 Resp ";
 
-    stream << "OCR: "<< "0x" <<  setw(6) << setfill('0') << hex << occr << endl;
-    stream << parse_CMD5_OCR(occr);
+    stream << "OCR: "<< "0x" <<  setw(6) << setfill('0') << hex << occr;
 
     string str = stream.str();
     const char * chr = str.c_str();
@@ -63,7 +63,7 @@ const char* SdioCmd5Resp::getDetailedString()
     stream << "Num Functions: " << numIOFunctions() << ", ";
     stream << "Memory Present: " << isMemoryPresent() << ", ";
 
-    stream << "OCR: "<< "0x" <<  setw(6) << setfill('0') << hex << getOCCR();
+    stream << "OCR: "<< "0x" <<  setw(6) << setfill('0') << hex << (unsigned int)getOCCR();
 
     
 
