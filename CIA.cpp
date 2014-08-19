@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <list>
+#include <iterator>
 
 using namespace std;
 
@@ -252,7 +254,8 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
     SdioCmd52Resp *c52Resp = new SdioCmd52Resp(data);
     U32 regAddress = 0;
     U32 c_data = 0;
-    list<TUPLE>::iterator = tuples.end();
+    list<TUPLE>::iterator it = tuples.end();
+    TUPLE tuple;
 
     regAddress = c52->getRegisterAddress();
     c_data = (U8)c52Resp->getData();
@@ -263,25 +266,38 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
         // end addresses for the range checking, etc.
         cout <<"++++++++++++++++++++++++++++++++++++++++++++++ building cis: 0x" << hex << cisAddress <<endl;
         newTuplePending = true;
-        tuples.push_back(TUPLE(cisAddress));
+        tuple = TUPLE(regAddress);
+        tuple.setTplCode(c_data);
+        tuples.push_back(tuple);
+
     }
     else if (regAddress == lastTupleAddress)
     {
+        tuple = TUPLE(regAddress);
+        tuple.setTplCode(c_data);
+
         if (c_data == 0xff)
         {
             // done with tuple walk
+            tuple.setSize(0);
+
             cout <<"++++++++++++++++++++++++++++++++++++++++++++++ tuple is done: 0x" 
                 << hex << cisAddress << ", data: 0x" << hex << c_data << endl;
         }
         else
         {
+            newTuplePending = true;
+
             cout <<"++++++++++++++++++++++++++++++++++++++++++++++ time for next tuple: 0x" 
                 << hex << lastTupleAddress << ", data: 0x" << hex << c_data << endl;
-            newTuplePending = true;
+
         }
+        tuples.push_back(tuple);
     }
     else if ((regAddress < lastTupleAddress) && (regAddress > cisAddress))
     {
+        it--;
+        it->addData(c_data);
         cout <<"++++++++++++++++++++++++++++++++++++++++++++++ generic tuple read: 0x" 
             << hex << regAddress << ", data: 0x" << hex << c_data << endl;
     }
@@ -289,6 +305,8 @@ void CCCR::TupleChain::addDataToTuple(U64 data)
     {
         if (newTuplePending)
         {
+            it--;
+            it->setSize(c_data);
             newTuplePending = false;
             lastTupleAddress = regAddress + c_data + 1;
             cout <<"++++++++++++++++++++++++++++++++++++++++++++++ next tuple is at: 0x" 
